@@ -8,7 +8,7 @@ let env_arg_or_default = (.arg :: string, .default :: string) -> string => (
     )
 );
 
-# Environment variables to consider kast-mommy
+# Environment variables to configure kast-mommy
 # SHELL_MOMMYS_LITTLE - what to call you~ (default: "girl")
 # SHELL_MOMMYS_PRONOUNS - what pronouns mommy will use for themself~ (default: "her")
 # SHELL_MOMMYS_ROLES - what role mommy will have~ (default "mommy")
@@ -67,32 +67,43 @@ const ResponseType = type (
 # replace all occurences of a string by a new string
 module:
 let string_replace = (s :: string, .old :: string, .new :: string) => with_return (
-    if String.length old == 0 then return (s, .found = false);
-    if String.length s == 0 then return (s, .found = false);
-    if String.length s < String.length old then return (s, .found = false);
+    # an empty `old` means we cannot replace
+    if String.length old == 0 then return s;
+    # an empty `s` means we cannot replace
+    if String.length s == 0 then return s;
+    # `s` smaller than `old` means we cannot replace
+    if String.length s < String.length old then return s;
     if String.length s == String.length old then return (
-        if s == old then (new, .found = true) else (s, .found = false)
+        if s == old then (
+            # `s` == `old` means replaced is just `new`
+            new
+        ) else (
+            # `s` equal to `old` in size but not contents means we cannot replace
+            s
+        )
     );
+    
     let end = (String.length s - String.length old + 1);
     let start :: int32 = 0;
     while start < end and String.substring (s, start, String.length old) != old do (
         start += 1
     );
+    
     if start == end then (
-        s, .found = false
+        # `old` not found in `s`
+        s
     ) else (
-        let remaining_str = String.substring (
-            s, start + String.length old, String.length s - start - String.length old
+        # `old` found in `s`, replace with `new` and continue searching in remaining portion of `s`
+        let rest = String.substring (
+            s,
+            start + String.length old,
+            String.length s - start - String.length old
         );
-        let (replaced_rest, .found = _) = string_replace (remaining_str, .old, .new);
-        let new_string = String.substring (
-            s, 0, start
-        )
+        let replaced_rest = string_replace (rest, .old, .new);
+        
+        String.substring (s, 0, start)
         + new
-        + replaced_rest;
-        (
-            new_string, .found = true
-        )
+        + replaced_rest
     )
 );
 
@@ -130,13 +141,13 @@ let sub_terms = (response :: string) => (
     let role = pick_word DEF_WORDS_ROLES;
     
     # sub in the terms, store in variable
-    let (response, .found = _) = string_replace (
+    response = string_replace (
         response, .old = "AFFECTIONATE_TERM", .new = affectionate_term
     );
-    let (response, .found = _) = string_replace (
+    response = string_replace (
         response, .old = "MOMMYS_PRONOUN", .new = pronoun
     );
-    let (response, .found = _) = string_replace (
+    response = string_replace (
         response, .old = "MOMMYS_ROLE", .new = role
     );
     
