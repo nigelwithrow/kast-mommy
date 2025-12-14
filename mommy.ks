@@ -141,13 +141,13 @@ let sub_terms = (response :: string) => (
     let role = pick_word DEF_WORDS_ROLES;
     
     # sub in the terms, store in variable
-    response = string_replace (
+    response = String.replace_all_owned (
         response, .old = "AFFECTIONATE_TERM", .new = affectionate_term
     );
-    response = string_replace (
+    response = String.replace_all_owned (
         response, .old = "MOMMYS_PRONOUN", .new = pronoun
     );
-    response = string_replace (
+    response = String.replace_all_owned (
         response, .old = "MOMMYS_ROLE", .new = role
     );
     
